@@ -22,6 +22,8 @@ RIGHT_IRIS = [474, 475, 476, 477]
 
 RIGHT_EYE_LEFT = 362
 RIGHT_EYE_RIGHT = 263
+RIGHT_EYE_TOP = 386
+RIGHT_EYE_BOTTOM = 374
 
 # ==========================================
 # START CAMERA
@@ -92,11 +94,16 @@ while True:
             # GET LEFT EYE BOUNDARIES
             # ==========================================
 
-            eye_left = face_landmarks.landmark[362]
-            eye_right = face_landmarks.landmark[263]
+            eye_left = face_landmarks.landmark[RIGHT_EYE_LEFT]
+            eye_right = face_landmarks.landmark[RIGHT_EYE_RIGHT]
+
+            eye_top = face_landmarks.landmark[RIGHT_EYE_TOP]
+            eye_bottom = face_landmarks.landmark[RIGHT_EYE_BOTTOM]
 
             eye_left_x = int(eye_left.x * w)
             eye_right_x = int(eye_right.x * w)
+            eye_top_y = int(eye_top.y * h)
+            eye_bottom_y = int(eye_bottom.y * h)
 
             cv2.circle(frame, (eye_left_x, center_y), 8, (0, 255, 0), -1)
             cv2.circle(frame, (eye_right_x, center_y), 8, (255, 255, 0), -1)
@@ -118,6 +125,9 @@ while True:
             eye_width = abs(eye_right_x - eye_left_x)
 
             iris_ratio = abs(center_x - eye_left_x) / eye_width
+            eye_height = abs(eye_bottom_y - eye_top_y)
+
+            vertical_ratio = abs(center_y - eye_top_y) / eye_height
 
             # ==========================================
             # DETERMINE GAZE DIRECTION
@@ -130,6 +140,11 @@ while True:
 
             elif iris_ratio > 0.58:
                 direction = "RIGHT"
+            if vertical_ratio < 0.40:
+                direction = "UP"
+
+            elif vertical_ratio > 0.65:
+                direction = "DOWN"
 
             # ==========================================
             # DISPLAY RESULTS
@@ -147,7 +162,7 @@ while True:
 
             cv2.putText(
                 frame,
-                f"RATIO: {iris_ratio:.2f}",
+                f"H:{iris_ratio:.2f} V:{vertical_ratio:.2f}",
                 (20, 90),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.8,
